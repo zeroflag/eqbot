@@ -1,0 +1,80 @@
+"gemini" need -> var gemini
+"lua-dotenv" need -> var dotenv
+
+alias: model "gemini-2.0-flash"
+alias: new-client #( gemini.Client.new 2 )
+alias: io-read #( io.read )
+alias: io-write #( io.write 1 0 )
+alias: io-flush #( io.flush 0 0 )
+alias: concat #( table.concat 2 )
+alias: dotenv-load ".env" #( dotenv.load_dotenv 1 )
+alias: dotenv-get #( dotenv.get 1 1 )
+alias: bye #( os.exit )
+
+var client
+
+: init
+  dotenv-load
+  "api_key" dotenv-get
+  dup nil = if 
+    drop 
+    "Error: api_key not found in .env" . cr
+    bye
+  else
+    model new-client -> client 
+  then ;
+
+"Context:\n%s\nChat History:\n%s\nQuestion:\n%s\nAnswer:" -> var prompt-template
+
+"" -> var context
+[] -> var history
+"" -> var question
+"" -> var answer
+
+: prompt
+  prompt-template
+  context
+  history "\n" concat
+  question #( string.format 4 ) ;
+
+: add-history
+  history
+  " - User: " question .. "\n" ..
+  " - AI: "   answer ..
+  ..
+  append ;
+
+: gen-content ( s -- s )
+  "You are a helpful assistent. Use the following context and chat history to answer questions. "
+  "Your output is displayed in a terminal window, so be concise and use simple ascii characters." ..
+  #( client:generate_content 2 ) ;
+
+: ask-question prompt gen-content -> answer ;
+
+: .models ( -- )
+  #( client:get_model_names )
+  ipairs: i name
+    name . cr
+  end ;
+
+: .prompt prompt . cr ;
+
+: input cr "%" . io-read ;
+
+: clear "\27[2J\27[H" io-write io-flush ;
+
+init
+
+begin
+  input
+  case
+    "bye"    of bye endof
+    "prompt" of .prompt endof
+    "models" of .models endof
+    "clear"  of clear endof
+    -> question
+    ask-question
+    add-history
+    answer .
+  endcase
+again
