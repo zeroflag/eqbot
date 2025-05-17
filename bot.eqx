@@ -11,6 +11,12 @@ alias: dotenv-load ".env" #( dotenv.load_dotenv 1 )
 alias: dotenv-get #( dotenv.get 1 1 )
 alias: bye #( os.exit )
 
+alias: RED    "\27[1;91m"
+alias: GREEN  "\27[1;92m"
+alias: CYAN   "\27[1;96m"
+alias: PURPLE "\27[1;95m"
+alias: RESET  "\27[0m"
+
 var client
 
 "Context:\n%s\nChat History:\n%s\nQuestion:\n%s\nAnswer:" -> var prompt-template
@@ -71,10 +77,22 @@ var role
 
 : .prompt build-prompt . cr ;
 : .system build-sys-message . cr ;
-: input cr "%" . io-read ;
+
+: cprint ( color s -- )
+  "%s%s%s" -rot RESET #( string.format 4 ) io-write ;
+
+: input
+  cr
+  GREEN "% " cprint
+  CYAN io-write
+  io-read
+  RESET io-write ;
+
 : clear "\27[2J\27[H" io-write io-flush ;
 
 init
+
+CYAN "Ready." cprint
 
 begin
   input
@@ -90,6 +108,7 @@ begin
     -> question
     ask-question
     add-history
-    answer .
+    PURPLE answer cprint
+    depth 0 != if RED "something wrong" cprint then
   endcase
 again
