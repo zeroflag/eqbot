@@ -13,17 +13,6 @@ alias: bye #( os.exit )
 
 var client
 
-: init
-  dotenv-load
-  "api_key" dotenv-get
-  dup nil = if 
-    drop 
-    "Error: api_key not found in .env" . cr
-    bye
-  else
-    model new-client -> client 
-  then ;
-
 "Context:\n%s\nChat History:\n%s\nQuestion:\n%s\nAnswer:" -> var prompt-template
 
 "" -> var context
@@ -31,7 +20,26 @@ var client
 "" -> var question
 "" -> var answer
 
-: prompt
+var mood
+var role
+
+: clear-history [] -> history ;
+
+: init
+  dotenv-load
+  "mood" dotenv-get dup nil = if drop "helpful"   then -> mood
+  "role" dotenv-get dup nil = if drop "assistant" then -> role
+  "api_key" dotenv-get
+  dup nil = if
+    drop
+    "Error: api_key not found in .env" . cr
+    bye
+  else
+    model new-client -> client
+  then
+  clear-history ;
+
+: build-prompt
   prompt-template
   context
   history "\n" concat
@@ -44,12 +52,16 @@ var client
   ..
   append ;
 
-: gen-content ( s -- s )
-  "You are a helpful assistent. Use the following context and chat history to answer questions. "
-  "Your output is displayed in a terminal window, so be concise and use simple ascii characters." ..
-  #( client:generate_content 2 ) ;
+: build-sys-message
+  "You are a " mood .. " " .. role .. ". " ..
+  "Use the following context and chat history to answer questions. " ..
+  "Your output is displayed in a terminal window, so be concise and use simple ascii characters." .. ;
 
-: ask-question prompt gen-content -> answer ;
+: gen-content ( s -- s )
+  build-sys-message #( client:generate_content 2 ) ;
+
+: ask-question
+  build-prompt gen-content -> answer ;
 
 : .models ( -- )
   #( client:get_model_names )
@@ -57,10 +69,9 @@ var client
     name . cr
   end ;
 
-: .prompt prompt . cr ;
-
+: .prompt build-prompt . cr ;
+: .system build-sys-message . cr ;
 : input cr "%" . io-read ;
-
 : clear "\27[2J\27[H" io-write io-flush ;
 
 init
@@ -68,10 +79,14 @@ init
 begin
   input
   case
-    "bye"    of bye endof
-    "prompt" of .prompt endof
-    "models" of .models endof
-    "clear"  of clear endof
+    "bye"     of  bye    endof
+    "prompt"  of .prompt endof
+    "system"  of .system endof
+    "models"  of .models endof
+    "clear"   of  clear  endof
+    "reset"   of
+      clear-history
+    endof
     -> question
     ask-question
     add-history
