@@ -10,5 +10,5 @@ $ luarocks install equinox
 
 # Start the bot
 
-$ equinox eqbot.eqx
+$ equinox bot.eqx
 ```
