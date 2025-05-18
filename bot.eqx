@@ -26,6 +26,7 @@ var client
 
 var mood
 var role
+var instructions
 var model
 
 : cprint ( color s -- )
@@ -52,8 +53,10 @@ var model
 
 : build-sys-message
   "You are a " mood .. " " .. role .. ". " ..
-  "Use the following context and chat history to answer questions. " ..
-  "Your output is displayed in a terminal window, so be concise and use simple ascii characters." .. ;
+  instructions ". " .. ..
+  "Use the following context to answer the question. " ..
+  "Your output is displayed in a terminal window, so be concise and use simple ascii characters. " ..
+  "Don't use markdown or similar formatting. " .. ;
 
 : gen-content ( s -- s )
   build-sys-message #( client:generate_content 2 ) ;
@@ -102,6 +105,7 @@ var model
   dotload
   "mood"  "helpful"   dotget -> mood
   "role"  "assistant" dotget -> role
+  "instr" ""          dotget -> instructions
   "model" "gemini-2.0-flash" dotget -> model
   "api_key" nil dotget
   dup nil = if
@@ -116,10 +120,10 @@ var model
 
 : eval-question ( s -- )
   dup "" = if
-    drop
+    ( q ) drop
     "" -> answer
   else
-    -> question
+    ( q ) -> question
     ask-question
     add-history
   then ;
