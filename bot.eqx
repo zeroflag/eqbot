@@ -26,9 +26,12 @@ var context
 
 [] -> var history
 
-"Context:\n%s\n"
-"Chat History:\n%s\n" ..
-"Question:\n%s\n" ..
+"Context:\n"
+"%s\n" ..
+"Chat History:\n" ..
+"%s\n" ..
+"Question:\n" ..
+"%s\n" ..
 "Answer:" ..
 -> var prompt-template
 
