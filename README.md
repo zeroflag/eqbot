@@ -1,5 +1,5 @@
 # eqbot
-Simple AI chatbot written in Equinox 
+Simple AI chatbot written in [Equinox](https://github.com/zeroflag/equinox)
 
 ```bash
 # Install dependencies
