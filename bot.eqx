@@ -16,18 +16,21 @@ alias: PURPLE "\27[1;95m"
 alias: RESET  "\27[0m"
 
 var client
-
-"Context:\n%s\nChat History:\n%s\nQuestion:\n%s\nAnswer:" -> var prompt-template
-
-"" -> var context
-[] -> var history
-"" -> var question
-"" -> var answer
-
+var question
+var answer
 var mood
 var role
 var instructions
 var model
+var context
+
+[] -> var history
+
+"Context:\n%s\n"
+"Chat History:\n%s\n" ..
+"Question:\n%s\n" ..
+"Answer:" ..
+-> var prompt-template
 
 : cprint ( color s -- )
   "%s%s%s" -rot RESET #( string.format 4 ) io-write ;
@@ -58,11 +61,15 @@ var model
   "Your output is displayed in a terminal window, so be concise and use simple ascii characters. " ..
   "Don't use markdown or similar formatting. " .. ;
 
-: gen-content ( s -- s )
+: load-context
+  \ TODO do similarity check on question and docs
+  "" -> context ;
+
+: call-llm ( s -- s )
   build-sys-message #( client:generate_content 2 ) ;
 
 : ask-question
-  build-prompt gen-content -> answer ;
+  build-prompt call-llm -> answer ;
 
 : .models ( -- )
   #( client:get_model_names )
@@ -124,6 +131,7 @@ var model
     "" -> answer
   else
     ( q ) -> question
+    load-context
     ask-question
     add-history
   then ;
