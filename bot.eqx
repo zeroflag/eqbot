@@ -139,6 +139,17 @@ var context
     add-history
   then ;
 
+: show-cursor "\27[?25h" io-write ;
+
+: start-anim
+  "equinox anim.eqx & echo $! > pid.txt"
+  #( os.execute 1 0 ) ;
+
+: stop-anim
+  "kill -9 `cat pid.txt`"
+  #( os.execute 1 0 )
+  show-cursor ;
+
 : repl
   begin
     read
@@ -152,7 +163,9 @@ var context
       "help"    of .help    endof
       "forget"  of  forget  endof
       "history" of .history endof
+      start-anim
       ( q ) eval-question
+      stop-anim
       PURPLE answer cprint
       depth 0 != if RED cr "something wrong" cprint then
     endcase

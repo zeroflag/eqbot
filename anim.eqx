@@ -1,0 +1,20 @@
+"socket" need -> var socket
+
+alias: sleep #( socket.sleep 1 )
+alias: io-write #( io.write 1 0 )
+alias: io-flush #( io.flush 0 0 )
+
+[ "-" "\\" "|" "/" ] -> var frames
+1 -> var idx
+
+: hide-cursor "\27[?25l" io-write ;
+
+hide-cursor
+
+begin
+  frames idx @ io-write
+  "\r" io-write
+  io-flush
+  0.1 sleep
+  idx frames # % 1 + -> idx
+again
